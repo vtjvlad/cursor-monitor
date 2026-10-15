@@ -57,8 +57,10 @@ async function refresh() {
       persist.message,
       persist.error ? `Ошибка: ${persist.error}` : ''
     ].filter(Boolean).join('\n');
+    return true;
   } catch (error) {
     showError(error);
+    return false;
   } finally {
     $('refresh').disabled = false;
   }
@@ -66,15 +68,11 @@ async function refresh() {
 $('auth-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   token = $('token').value.trim();
-  try {
-    await refresh();
-    if ($('connection').classList.contains('ok')) {
-      $('token').value = '';
-      clearInterval(refreshTimer);
-      refreshTimer = setInterval(refresh, 15000);
-    }
-  } catch (error) {
-    showError(error);
+  const connected = await refresh();
+  if (connected) {
+    $('token').value = '';
+    clearInterval(refreshTimer);
+    refreshTimer = setInterval(refresh, 15000);
   }
 });
 $('refresh').addEventListener('click', refresh);
