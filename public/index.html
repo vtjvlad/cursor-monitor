@@ -46,6 +46,10 @@
             <small id="side-status-caption">Connect to your API</small>
           </div>
         </div>
+        <button class="button button-primary connect-trigger"
+                id="open-connect" type="button">
+          Connect API <span>↗</span>
+        </button>
         <div class="sidebar-footer">
           <span class="brand-mark mini">C<span>.</span></span>
           <span>Cursor Monitor <small>v0.1.0</small></span>
@@ -78,24 +82,7 @@
           </div>
         </section>
 
-        <section class="auth-panel panel" id="auth-panel">
-          <div class="auth-copy">
-            <div class="auth-icon">⌁</div>
-            <div>
-              <h2>Подключение к API</h2>
-              <p>Введи API-токен из серверного файла .env.</p>
-            </div>
-          </div>
-          <form id="auth-form" class="auth-form">
-            <label class="sr-only" for="token">API-токен</label>
-            <input id="token" type="password" autocomplete="off"
-              placeholder="Вставь API-токен…" required>
-            <button class="button button-primary" type="submit" id="connect-button">
-              Подключиться <span>→</span>
-            </button>
-          </form>
-          <p class="auth-note">Токен хранится только в памяти текущей вкладки.</p>
-        </section>
+        
 
         <div class="error-banner" id="error-banner" role="alert" hidden></div>
 
@@ -214,5 +201,42 @@
       </div>
     </main>
   </div>
+
+  <div class="connect-modal" id="connect-modal" hidden>
+    <button class="modal-backdrop" id="connect-backdrop"
+            type="button" aria-label="Закрыть окно"></button>
+    <section class="connect-dialog" role="dialog"
+             aria-modal="true" aria-labelledby="connect-title">
+      <button class="modal-close" id="close-connect" type="button"
+              aria-label="Закрыть">×</button>
+      <div class="modal-eyebrow">CURSOR MONITOR / AUTH</div>
+      <h2 id="connect-title">Подключение к API</h2>
+      <p class="modal-description">
+        Введи API-токен из серверного файла .env.
+      </p>
+      <section class="auth-panel panel" id="auth-panel">
+          <div class="auth-copy">
+            <div class="auth-icon">⌁</div>
+            <div>
+              <h2>Подключение к API</h2>
+              <p>Введи API-токен из серверного файла .env.</p>
+            </div>
+          </div>
+          <form id="auth-form" class="auth-form">
+            <label class="sr-only" for="token">API-токен</label>
+            <input id="token" type="password" autocomplete="off"
+              placeholder="Вставь API-токен…" required>
+            <button class="button button-primary" type="submit" id="connect-button">
+              Подключиться <span>→</span>
+            </button>
+          </form>
+          <p class="auth-note">Токен хранится только в памяти текущей вкладки.</p>
+        </section>
+      <p class="modal-security">
+        Токен хранится в sessionStorage этой вкладки.
+      </p>
+    </section>
+  </div>
+
 </body>
 </html>

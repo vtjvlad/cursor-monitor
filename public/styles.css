@@ -235,3 +235,126 @@ kbd { border: 1px solid #3a3047; border-radius: 4px; padding: 2px 5px; font-size
 @media (prefers-reduced-motion: no-preference) {
   .panel, .nav-item, .process-item, .button, .icon-button { transition: background-color .15s ease, border-color .15s ease; }
 }
+
+
+/* API connection modal */
+.connect-trigger {
+  width: 100%;
+  justify-content: center;
+  margin: 14px 0;
+}
+
+.connect-modal[hidden] {
+  display: none !important;
+}
+
+.connect-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: rgba(5, 5, 12, .78);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  cursor: default;
+}
+
+.connect-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 460px);
+  padding: 32px;
+  border: 1px solid rgba(167, 139, 250, .28);
+  border-radius: 22px;
+  background: #15141f;
+  color: #f4f1ff;
+  box-shadow: 0 28px 100px rgba(0, 0, 0, .55);
+  animation: connect-modal-in .18s ease-out;
+}
+
+.connect-dialog h2 {
+  margin: 10px 34px 8px 0;
+  font-size: 25px;
+  letter-spacing: -.6px;
+}
+
+.modal-eyebrow {
+  color: #a78bfa;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.7px;
+}
+
+.modal-description,
+.modal-security {
+  color: #a5a1b5;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.modal-security {
+  margin: 18px 0 0;
+}
+
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 17px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  color: #c9c4d8;
+  font-size: 23px;
+  cursor: pointer;
+}
+
+.connect-dialog .auth-panel {
+  display: block !important;
+  margin: 22px 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.connect-dialog .auth-copy {
+  display: none;
+}
+
+.connect-dialog .auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.connect-dialog .auth-form input,
+.connect-dialog .auth-form .button {
+  width: 100%;
+  min-width: 0;
+}
+
+.connect-dialog .auth-note {
+  display: none;
+}
+
+@keyframes connect-modal-in {
+  from { opacity: 0; transform: translateY(8px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 520px) {
+  .connect-modal { padding: 14px; }
+  .connect-dialog { padding: 25px 20px; border-radius: 18px; }
+}

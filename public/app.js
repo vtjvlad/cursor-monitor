@@ -333,6 +333,7 @@ $('auth-form').addEventListener('submit', async (event) => {
   if (connected) {
     $('token').value = '';
     sessionStorage.setItem('cursor-monitor-token', token);
+    hideConnectModal();
     clearInterval(refreshTimer);
     refreshTimer = setInterval(refresh, 15000);
   } else {
@@ -379,12 +380,46 @@ setWaiting();
 renderView();
 
 if (token) {
-  $('token').value = token;
   refresh().then((connected) => {
     if (connected) {
       $('token').value = '';
       clearInterval(refreshTimer);
       refreshTimer = setInterval(refresh, 15000);
+      hideConnectModal();
+    } else {
+      sessionStorage.removeItem('cursor-monitor-token');
+      token = '';
+      showConnectModal();
     }
   });
+} else {
+  showConnectModal();
 }
+
+
+function showConnectModal() {
+  $('connect-modal').hidden = false;
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => $('token').focus(), 50);
+}
+
+function hideConnectModal() {
+  $('connect-modal').hidden = true;
+  document.body.style.overflow = '';
+}
+
+$('open-connect').addEventListener('click', showConnectModal);
+
+$('close-connect').addEventListener('click', () => {
+  if (token && snapshot) hideConnectModal();
+});
+
+$('connect-backdrop').addEventListener('click', () => {
+  if (token && snapshot) hideConnectModal();
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !$('connect-modal').hidden && token && snapshot) {
+    hideConnectModal();
+  }
+});
