@@ -410,16 +410,24 @@ function hideConnectModal() {
 
 $('open-connect').addEventListener('click', showConnectModal);
 
-$('close-connect').addEventListener('click', () => {
-  if (token && snapshot) hideConnectModal();
-});
+$('close-connect').addEventListener('click', hideConnectModal);
 
-$('connect-backdrop').addEventListener('click', () => {
-  if (token && snapshot) hideConnectModal();
-});
+$('connect-backdrop').addEventListener('click', hideConnectModal);
 
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && !$('connect-modal').hidden && token && snapshot) {
+  if (event.key === 'Escape' && !$('connect-modal').hidden) {
     hideConnectModal();
   }
+});
+
+$('reset-token').addEventListener('click', () => {
+  token = '';
+  sessionStorage.removeItem('cursor-monitor-token');
+
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+    refreshTimer = null;
+  }
+
+  window.location.reload();
 });

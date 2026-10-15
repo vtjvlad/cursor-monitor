@@ -358,3 +358,24 @@ kbd { border: 1px solid #3a3047; border-radius: 4px; padding: 2px 5px; font-size
   .connect-modal { padding: 14px; }
   .connect-dialog { padding: 25px 20px; border-radius: 18px; }
 }
+
+
+/* Token reset action */
+.reset-token-button {
+  width: 100%;
+  margin: 8px 0 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(167, 139, 250, .22);
+  border-radius: 10px;
+  background: transparent;
+  color: #aaa4c0;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.reset-token-button:hover {
+  background: rgba(167, 139, 250, .08);
+  border-color: rgba(167, 139, 250, .5);
+  color: #e4ddff;
+}
