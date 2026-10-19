@@ -33,6 +33,9 @@
           <span class="nav-icon">⌘</span><span>Processes</span>
           <span class="nav-count" id="nav-process-count">0</span>
         </button>
+        <button class="nav-item" data-view="agent">
+          <span class="nav-icon">▶</span><span>Agent</span>
+        </button>
         <button class="nav-item" data-view="events">
           <span class="nav-icon">≋</span><span>Diagnostics</span>
         </button>
@@ -67,7 +70,7 @@
           <strong id="breadcrumb-current">Overview</strong>
         </div>
         <div class="topbar-actions">
-          <span class="live-indicator"><span class="status-dot"></span> READ ONLY</span>
+          <span class="live-indicator"><span class="status-dot"></span> <span id="live-label">READ ONLY</span></span>
           <button class="icon-button" id="refresh" type="button" title="Обновить данные" aria-label="Обновить данные">↻</button>
         </div>
       </header>
@@ -200,9 +203,97 @@
           </details>
         </section>
 
+
+        <section class="agent-panel" id="agent-panel" hidden>
+          <article class="panel agent-card">
+            <div class="panel-heading">
+              <div>
+                <h2>Запуск Cursor Agent</h2>
+                <p>Укажи рабочий каталог и задачу для агента.</p>
+              </div>
+              <span class="count-badge">CLI</span>
+            </div>
+
+            <form id="agent-form" class="agent-form">
+              <label for="agent-cwd">Рабочая директория</label>
+              <input
+                id="agent-cwd"
+                name="cwd"
+                type="text"
+                value="/home/ubuntu/server/cursor-monitor"
+                autocomplete="off"
+                spellcheck="false"
+                required
+              >
+              <p class="agent-hint">
+                Разрешены каталоги внутри /home/ubuntu/server/, кроме самого корня.
+              </p>
+
+              <label for="agent-prompt">Промпт</label>
+              <textarea
+                id="agent-prompt"
+                name="prompt"
+                rows="7"
+                maxlength="12000"
+                placeholder="Опиши задачу для Cursor Agent…"
+                required
+              ></textarea>
+
+              <div class="agent-form-footer">
+                <span id="agent-prompt-count">0 / 12000</span>
+                <button class="button button-primary" id="agent-start" type="submit">
+                  ▶ Запустить агента
+                </button>
+              </div>
+            </form>
+          </article>
+
+          <article class="panel agent-card agent-result">
+            <div class="panel-heading">
+              <div>
+                <h2>Выполнение задачи</h2>
+                <p id="agent-message" role="status" aria-live="polite">
+                  Задача ещё не запускалась.
+                </p>
+              </div>
+              <span class="agent-status" id="agent-status">Нет задачи</span>
+            </div>
+
+            <div class="agent-meta">
+              <div>
+                <span>Рабочий каталог</span>
+                <code id="agent-directory">—</code>
+              </div>
+              <div>
+                <span>Начало</span>
+                <code id="agent-started">—</code>
+              </div>
+              <div>
+                <span>Код завершения</span>
+                <code id="agent-exit-code">—</code>
+              </div>
+            </div>
+
+            <div class="agent-output-heading">
+              <strong>Вывод агента</strong>
+              <button class="filter-button" id="agent-clear-output" type="button">
+                Очистить отображение
+              </button>
+            </div>
+            <pre class="agent-output" id="agent-output">Вывод появится после запуска.</pre>
+
+            <div class="agent-actions">
+              <span id="agent-output-note">Обновление при выполнении — каждые 2 секунды.</span>
+              <button class="button button-danger" id="agent-stop" type="button" disabled>
+                ■ Остановить
+              </button>
+            </div>
+          </article>
+        </section>
+
         <footer class="page-footer">
           <span><span class="footer-dot"></span> READ-ONLY MONITORING</span>
-          <span>Никакие команды агента не запускаются монитором.</span>
+          <span>Управляемый запуск Cursor Agent доступен в разделе Agent.</span>
         </footer>
       </div>
     </main>
@@ -216,6 +307,9 @@
       </button>
       <button type="button" class="mobile-nav-item" data-view="processes">
         <span class="mobile-nav-icon">⌘</span><span>Processes</span>
+      </button>
+      <button type="button" class="mobile-nav-item" data-view="agent">
+        <span class="mobile-nav-icon">▶</span><span>Agent</span>
       </button>
       <button type="button" class="mobile-nav-item" data-view="events">
         <span class="mobile-nav-icon">≋</span><span>Диагностика</span>

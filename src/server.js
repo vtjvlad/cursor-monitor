@@ -10,7 +10,7 @@ const app = express();
 const here = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.resolve(here, '../public');
 app.disable('x-powered-by');
-app.use(express.json({ limit: '16kb' }));
+app.use(express.json({ limit: '32kb' }));
 app.get('/api/health', requireAuth, healthRouter);
 app.use('/api/sessions', requireAuth, sessionsRouter);
 app.use('/api/agent', requireAuth, agentRouter);

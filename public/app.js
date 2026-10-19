@@ -7,12 +7,17 @@ let selectedId = null;
 let activeView = 'overview';
 let activeFilter = 'all';
 let activeDetailTab = 'overview';
+let agentTask = null;
+let agentPollTimer = null;
+let agentPollBusy = false;
+let agentOutputCleared = false;
 
 const viewInfo = {
   overview: ['Overview', 'Состояние CLI-процессов и обнаруженных сессий.'],
   sessions: ['Sessions', 'Сохранённые persistent sessions, доступные через Cursor CLI.'],
   processes: ['Processes', 'Процессы Cursor CLI, обнаруженные в системе.'],
-  events: ['Diagnostics', 'Источники данных и результаты последней проверки.']
+  events: ['Diagnostics', 'Источники данных и результаты последней проверки.'],
+  agent: ['Agent', 'Запуск Cursor Agent, статус задачи и вывод выполнения.']
 };
 
 function escapeHtml(value) {
@@ -33,16 +38,33 @@ function getPersistent() {
   };
 }
 
-async function api(path) {
+async function api(path, options = {}) {
   const response = await fetch(path, {
-    headers: { Authorization: `Bearer ${token}` },
+    ...options,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(options.headers || {})
+    },
     cache: 'no-store'
   });
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    // Ответ может быть не в формате JSON.
+  }
+
   if (response.status === 401) {
     throw new Error('Сервер отклонил токен (HTTP 401). Проверь токен из .env.');
   }
-  if (!response.ok) throw new Error(`Ошибка API: HTTP ${response.status}`);
-  return response.json();
+
+  if (!response.ok) {
+    throw new Error(data?.error || `Ошибка API: HTTP ${response.status}`);
+  }
+
+  return data;
 }
 
 function showError(error) {
@@ -277,6 +299,149 @@ function renderDiagnostics() {
   ].filter(Boolean).join('\n');
 }
 
+
+function isAgentActive(task = agentTask) {
+  return Boolean(task && ['starting', 'running', 'stopping'].includes(task.status));
+}
+
+function setAgentMessage(message, isError = false) {
+  const element = $('agent-message');
+  element.textContent = message;
+  element.classList.toggle('agent-message-error', isError);
+}
+
+function renderAgent() {
+  const task = agentTask;
+  const active = isAgentActive(task);
+
+  $('agent-status').textContent = task ? task.status : 'Нет задачи';
+  $('agent-status').className =
+    'agent-status' + (active ? ' running' : task?.status === 'completed' ? ' completed' : '');
+
+  $('agent-directory').textContent = task?.cwd || '—';
+  $('agent-started').textContent = task?.startedAt
+    ? new Date(task.startedAt).toLocaleString()
+    : '—';
+  $('agent-exit-code').textContent =
+    task?.exitCode === null || task?.exitCode === undefined
+      ? '—'
+      : String(task.exitCode);
+
+  $('agent-start').disabled = active;
+  $('agent-stop').disabled = !task || !['running', 'starting'].includes(task.status);
+
+  if (!agentOutputCleared) {
+    $('agent-output').textContent = task?.output || 'Вывод появится после запуска.';
+  }
+
+  $('agent-output-note').textContent = task?.truncated
+    ? 'Вывод достиг лимита отображения; более ранние или последующие данные могут отсутствовать.'
+    : 'Обновление при выполнении — каждые 2 секунды.';
+
+  if (task && task.status === 'completed') {
+    setAgentMessage('Задача успешно завершена.');
+  } else if (task && task.status === 'failed') {
+    setAgentMessage('Задача завершилась с ошибкой. Проверь вывод агента.', true);
+  } else if (task && task.status === 'stopped') {
+    setAgentMessage('Задача остановлена.');
+  } else if (task && task.status === 'stopping') {
+    setAgentMessage('Отправлен сигнал остановки. Ожидание завершения процесса.');
+  } else if (task && task.status === 'running') {
+    setAgentMessage('Агент выполняет задачу.');
+  } else if (task && task.status === 'starting') {
+    setAgentMessage('Запуск агента…');
+  }
+}
+
+function updateAgentPolling() {
+  if (token && isAgentActive()) {
+    if (!agentPollTimer) {
+      agentPollTimer = setInterval(loadAgentTask, 2000);
+    }
+  } else if (agentPollTimer) {
+    clearInterval(agentPollTimer);
+    agentPollTimer = null;
+  }
+}
+
+async function loadAgentTask() {
+  if (!token || agentPollBusy) return;
+
+  agentPollBusy = true;
+  try {
+    const data = await api('/monitor/api/agent');
+    agentTask = data.task || null;
+    renderAgent();
+    updateAgentPolling();
+  } catch (error) {
+    setAgentMessage(error.message || 'Не удалось загрузить состояние задачи.', true);
+  } finally {
+    agentPollBusy = false;
+  }
+}
+
+async function startAgent(event) {
+  event.preventDefault();
+
+  const cwd = $('agent-cwd').value.trim();
+  const prompt = $('agent-prompt').value.trim();
+
+  if (!cwd || !prompt) {
+    setAgentMessage('Укажи рабочую директорию и промпт.', true);
+    return;
+  }
+
+  if (!window.confirm(
+    'Запустить Cursor Agent в каталоге:\n' + cwd +
+    '\n\nАгент сможет выполнять действия в рамках своих полномочий. Продолжить?'
+  )) {
+    return;
+  }
+
+  $('agent-start').disabled = true;
+  setAgentMessage('Отправка задачи…');
+  agentOutputCleared = false;
+
+  try {
+    const data = await api('/monitor/api/agent', {
+      method: 'POST',
+      body: JSON.stringify({ cwd, prompt })
+    });
+
+    agentTask = data.task;
+    $('agent-output').textContent = agentTask?.output || 'Ожидание вывода агента…';
+    renderAgent();
+    updateAgentPolling();
+  } catch (error) {
+    setAgentMessage(error.message || 'Не удалось запустить агента.', true);
+  } finally {
+    renderAgent();
+  }
+}
+
+async function stopAgent() {
+  if (!agentTask?.id || !isAgentActive()) return;
+
+  if (!window.confirm('Остановить текущую задачу Cursor Agent?')) return;
+
+  $('agent-stop').disabled = true;
+  setAgentMessage('Отправка команды остановки…');
+
+  try {
+    const data = await api(
+      '/monitor/api/agent/' + encodeURIComponent(agentTask.id) + '/stop',
+      { method: 'POST' }
+    );
+
+    agentTask = data.task || agentTask;
+    renderAgent();
+    updateAgentPolling();
+  } catch (error) {
+    setAgentMessage(error.message || 'Не удалось остановить агента.', true);
+    renderAgent();
+  }
+}
+
 function renderView() {
   const [title, description] = viewInfo[activeView] || viewInfo.overview;
   $('page-title').textContent = title;
@@ -287,9 +452,16 @@ function renderView() {
     button.classList.toggle('active', button.dataset.view === activeView);
   });
 
-  $('diagnostics-panel').hidden = activeView !== 'overview' && activeView !== 'events';
-  $('diagnostics-panel').style.display =
-    activeView === 'overview' || activeView === 'events' ? '' : 'none';
+  const isAgent = activeView === 'agent';
+  $('stats-grid')?.toggleAttribute('hidden', isAgent);
+  document.querySelector('.workspace-grid').hidden = isAgent;
+  $('agent-panel').hidden = !isAgent;
+
+  const showDiagnostics = activeView === 'overview' || activeView === 'events';
+  $('diagnostics-panel').hidden = !showDiagnostics;
+  $('diagnostics-panel').style.display = showDiagnostics ? '' : 'none';
+  document.querySelector('.page-footer').hidden = isAgent;
+  $('live-label').textContent = isAgent ? 'AGENT CONTROL' : 'READ ONLY';
 
   if (activeView === 'events') {
     $('list-title').textContent = 'Диагностика источников';
@@ -301,7 +473,13 @@ function renderView() {
     $('list-title').textContent = 'Обнаруженные процессы';
     $('list-subtitle').textContent = 'Выбери процесс, чтобы посмотреть подробности.';
   }
+
   renderList();
+  renderAgent();
+
+  if (isAgent && token) {
+    loadAgentTask();
+  }
 }
 
 async function refresh() {
@@ -378,6 +556,19 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
+$('agent-form').addEventListener('submit', startAgent);
+$('agent-stop').addEventListener('click', stopAgent);
+
+$('agent-prompt').addEventListener('input', () => {
+  $('agent-prompt-count').textContent =
+    $('agent-prompt').value.length + ' / 12000';
+});
+
+$('agent-clear-output').addEventListener('click', () => {
+  agentOutputCleared = true;
+  $('agent-output').textContent = 'Отображение очищено. Новые данные появятся при следующем обновлении.';
+});
+
 setWaiting();
 renderView();
 
@@ -439,6 +630,10 @@ $('reset-token').addEventListener('click', () => {
   if (refreshTimer) {
     clearInterval(refreshTimer);
     refreshTimer = null;
+  }
+  if (agentPollTimer) {
+    clearInterval(agentPollTimer);
+    agentPollTimer = null;
   }
 
   window.location.reload();
