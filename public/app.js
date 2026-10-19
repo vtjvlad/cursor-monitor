@@ -146,6 +146,7 @@ function renderList() {
     button.addEventListener('click', () => {
       selectedId = button.dataset.recordId;
       activeDetailTab = 'overview';
+      document.body.classList.add('mobile-detail-open');
       renderList();
       renderDetails();
     });
@@ -360,6 +361,7 @@ document.querySelectorAll('[data-filter]').forEach((button) => {
 document.querySelectorAll('[data-view]').forEach((button) => {
   button.addEventListener('click', () => {
     activeView = button.dataset.view;
+    document.body.classList.remove('mobile-detail-open');
     renderView();
   });
 });
@@ -409,6 +411,16 @@ function hideConnectModal() {
 }
 
 $('open-connect').addEventListener('click', showConnectModal);
+
+$('mobile-open-connect').addEventListener('click', showConnectModal);
+
+$('mobile-back').addEventListener('click', () => {
+  document.body.classList.remove('mobile-detail-open');
+});
+
+$('mobile-reset-token').addEventListener('click', () => {
+  $('reset-token').click();
+});
 
 $('close-connect').addEventListener('click', hideConnectModal);
 

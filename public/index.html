@@ -149,6 +149,9 @@
 
           <article class="panel detail-panel">
             <div class="panel-heading detail-heading">
+              <button class="mobile-back-button" id="mobile-back" type="button">
+                <span aria-hidden="true">←</span> К списку
+              </button>
               <div>
                 <h2>Process details</h2>
                 <p>Информация о выбранной записи</p>
@@ -203,6 +206,24 @@
         </footer>
       </div>
     </main>
+
+    <nav class="mobile-nav" id="mobile-nav" aria-label="Мобильная навигация">
+      <button type="button" class="mobile-nav-item active" data-view="overview">
+        <span class="mobile-nav-icon">◫</span><span>Главная</span>
+      </button>
+      <button type="button" class="mobile-nav-item" data-view="sessions">
+        <span class="mobile-nav-icon">▤</span><span>Sessions</span>
+      </button>
+      <button type="button" class="mobile-nav-item" data-view="processes">
+        <span class="mobile-nav-icon">⌘</span><span>Processes</span>
+      </button>
+      <button type="button" class="mobile-nav-item" data-view="events">
+        <span class="mobile-nav-icon">≋</span><span>Диагностика</span>
+      </button>
+      <button type="button" class="mobile-nav-item" id="mobile-open-connect">
+        <span class="mobile-nav-icon">⌁</span><span>API</span>
+      </button>
+    </nav>
   </div>
 
   <div class="connect-modal" id="connect-modal" hidden>
@@ -235,6 +256,9 @@
           </form>
           <p class="auth-note">Токен хранится только в памяти текущей вкладки.</p>
         </section>
+      <button class="mobile-reset-token" id="mobile-reset-token" type="button">
+        ↻ Сбросить сохранённый токен
+      </button>
       <p class="modal-security">
         Токен хранится в sessionStorage этой вкладки.
       </p>
